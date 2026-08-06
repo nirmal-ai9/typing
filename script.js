@@ -1,80 +1,74 @@
-const Timer = document.querySelector(".timer");
+const timer = document.querySelector(".timer");
 const resetBtn = document.querySelector(".restart-button");
-const testArea = document.querySelector("#testArea");
-// const Textorigin = document.querySelector("#testText").innerHTML
-const Textorigin2 = document.querySelector(".testText2");
-const TextHolder = document.querySelector("#typing-area textarea");
-const TextChangerBtn = document.querySelector("#changeExample");
-const SaveTestTextBtn = document.querySelector("#save_lock");
-let clearIntervall;
-let isPressedFirstLetter = false;
-let milisecond = 0;
+const testArea = document.getElementById("testArea");
+const testText = document.querySelector(".testText2");
+const typingArea = document.querySelector("#typing-area textarea");
+const changeBtn = document.getElementById("changeExample");
+const saveBtn = document.getElementById("save_lock");
 
-function leadingZero(time) {
-  if (time <= 9) {
-    time = "0" + time;
-  }
-  return time;
-}
+let interval = null;
+let started = false;
+let milliseconds = 0;
+
 function runTimer() {
-  milisecond += 10;
-
-  let minutes = Math.floor(milisecond / 60000);
-  let seconds = Math.floor((milisecond % 60000) / 1000);
-  let hundredth = Math.floor((milisecond % 1000) / 10);
-
-  minutes = String(minutes).padStart(2, "0");
-  seconds = String(seconds).padStart(2, "0");
-  hundredth = String(hundredth).padStart(2, "0");
-  Timer.innerHTML = `${minutes}:${seconds}:${hundredth}`;
+  milliseconds += 10;
+  
+  const minutes = String(Math.floor(milliseconds / 60000)).padStart(2, "0");
+  const seconds = String(Math.floor(milliseconds % 60000 / 1000)).padStart(2, "0");
+  const hundredths = String(Math.floor(milliseconds % 1000 / 10)).padStart(2, "0");
+  
+  timer.textContent = `${minutes}:${seconds}:${hundredths}`;
 }
 
-function Start() {
-  let testAreaLength = testArea.value.length;
-  if ((testAreaLength == 0) & !isPressedFirstLetter) {
-    clearIntervall = setInterval(runTimer, 10);
-    isPressedFirstLetter = true;
+function startTimer() {
+  if (started) return;
+  
+  started = true;
+  interval = setInterval(runTimer, 10);
+}
+
+function spellCheck() {
+  const entered = testArea.value;
+  const original = testText.value;
+  
+  if (entered === original) {
+    typingArea.style.borderColor = "green";
+    clearInterval(interval);
+    return;
   }
+  
+  typingArea.style.borderColor =
+    entered === original.slice(0, entered.length) ?
+    "gold" :
+    "red";
 }
 
-function SpellCheck() {
-  let TextEntered = testArea.value;
-  let Textorigin = Textorigin2.value;
-  let TextMatch = Textorigin.substring(0, TextEntered.length);
-
-  if (TextEntered == Textorigin) {
-    TextHolder.style.borderColor = "green";
-
-    clearInterval(clearIntervall);
-  } else {
-    if (TextEntered == TextMatch) {
-      TextHolder.style.borderColor = "yellow";
-    } else {
-      TextHolder.style.borderColor = "red";
-    }
-  }
-}
 function reset() {
-  clearInterval();
-  clearIntervall = null;
-  timeHolder = [0, 0, 0, 0];
-  Timer.innerHTML = "00:00:00";
+  clearInterval(interval);
+  interval = null;
+  started = false;
+  milliseconds = 0;
+  
+  timer.textContent = "00:00:00";
   testArea.value = "";
-  TextHolder.style.borderColor = "#514c4c";
-  isPressedFirstLetter = false;
+  typingArea.style.borderColor = "#514c4c";
 }
+
 function changeText() {
-  Textorigin2.removeAttribute("readonly");
-  Textorigin2.focus();
-  SaveTestTextBtn.style.backgroundColor = "green";
+  testText.readOnly = false;
+  testText.focus();
+  saveBtn.style.backgroundColor = "green";
 }
+
 function lockText() {
-  Textorigin2.setAttribute("readonly", true);
-  SaveTestTextBtn.style.backgroundColor = "white";
+  testText.readOnly = true;
+  saveBtn.style.backgroundColor = "white";
   reset();
 }
-testArea.addEventListener("keypress", Start);
-testArea.addEventListener("keyup", SpellCheck);
+
+testArea.addEventListener("input", startTimer);
+testArea.addEventListener("keyup", spellCheck);
+
 resetBtn.addEventListener("click", reset);
-TextChangerBtn.addEventListener("click", changeText);
-SaveTestTextBtn.addEventListener("click", lockText);
+changeBtn.addEventListener("click", changeText);
+saveBtn.addEventListener("click", lockText);
